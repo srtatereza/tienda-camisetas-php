@@ -1,7 +1,7 @@
 :root {
     --primario: #f7dfe5;
-    --primarioOscuro:   #e5c2eb;
-    --secundario: rgb(78, 78, 78) ;
+    --primarioOscuro: #e5c2eb;
+    --secundario: rgb(201, 201, 201);
     --secundarioOscuro: #9287f5;
     --blanco: #FFF;
     --negro: #000;
@@ -11,7 +11,7 @@
 
 html {
     box-sizing: border-box;
-    font-size: 62.5%; 
+    font-size: 62.5%;
 }
 
 *, *:before, *:after {
@@ -24,53 +24,63 @@ body {
     font-size: 1.6rem;
     line-height: 1.5;
 }
+
 p {
     font-size: 1.8rem;
     font-family: Arial, Helvetica, sans-serif;
     color: var(--negro);
     font-family: var(--fuentePrincipal);
 }
+
 a {
     text-decoration: none;
     font-size: 3rem;
     font-family: var(--fuentePrincipal);
 }
+
 img {
     width: auto;
 }
+
 .contenedor {
     max-width: 120rem;
     margin: 0 auto;
     height: auto;
 }
+
 h1, h2, h3 {
     text-align: center;
     color: var(--negro);
     font-family: var(--fuentePrincipal);
 }
+
 h1 {
     font-size: 3rem;
 }
+
 h2 {
     font-size: 2.7rem;
 }
+
 h3 {
     font-size: 2.4rem;
 }
+
 .enlaces-sesion {
     display: flex;
     justify-content: space-around;
     align-items: center;
 }
-.button  {
-        display: inline-block;
-        padding: 10px 20px;
-        border: 1rem solid var(--secundarioOscuro); 
-        background-color: var(--primarioOscuro);
-        color: var(--negro);
-        text-decoration: none;
-        border-radius: 5px;
-    }
+
+.button {
+    display: inline-block;
+    padding: 10px 20px;
+    border: 1rem solid var(--secundarioOscuro);
+    background-color: var(--primarioOscuro);
+    color: var(--negro);
+    text-decoration: none;
+    border-radius: 5px;
+}
 
 
 /* Estilos del contenedor del banner */
@@ -93,15 +103,16 @@ h3 {
     max-width: 100%;
     justify-items: center;
 }
+
 input {
-   border: 1rem solid var(--primarioOscuro);
-   background-color: transparent;
-   color: var(--negro);
-   font-family: var(--fuentePrincipal);
-   font-size: 2rem;
-   padding: 1rem;
-   appearance: none;
-   width: 50%;
+    border: 1rem solid var(--primarioOscuro);
+    background-color: transparent;
+    color: var(--negro);
+    font-family: var(--fuentePrincipal);
+    font-size: 2rem;
+    padding: 1rem;
+    appearance: none;
+    width: 50%;
 }
 
 label {
@@ -112,17 +123,28 @@ label {
     padding: 1rem;
     width: 50%;
 }
+
 label.cantidad {
     width: 100%;
 }
 
 input.formulario_submit {
-    border: 1rem solid var(--secundarioOscuro); 
-   background-color: var(--primarioOscuro);
-   color: var(--negro);
-   font-family: var(--fuentePrincipal);
-   font-size: 2rem;
-   width: auto;
+    border: 1rem solid var(--secundarioOscuro);
+    background-color: var(--primarioOscuro);
+    color: var(--negro);
+    font-family: var(--fuentePrincipal);
+    font-size: 2rem;
+    width: auto;
+}
+
+input.formulario_submit_eliminar {
+    border: 0.5rem solid var(--secundarioOscuro);
+    background-color: var(--secundario);
+    color: var(--negro);
+    font-family: var(--fuentePrincipal);
+    font-size: 1.75rem;
+    width: auto;
+    padding: 0.75rem;
 }
 
 .menu {
@@ -147,7 +169,7 @@ ul.menu-content {
 
 ul.menu-content li {
     margin: 10px;
-    font-weight: bold; 
+    font-weight: bold;
 }
 
 ul.menu-content li a {
@@ -159,18 +181,20 @@ ul.menu-content li a {
 ul.menu-content li a:hover {
     border-bottom: 2px solid rgb(255, 255, 255);
 }
+
 .productos {
     max-width: 100%;
     display: grid;
-    grid-template-columns: repeat(1,1fr);
+    grid-template-columns: repeat(1, 1fr);
     place-items: center;
     margin: 0%;
     padding: 0%;
 }
 
-h3.titulo,p.titulo {
+h3.titulo, p.titulo {
     margin: 0%;
 }
+
 h3.titulo {
     margin-top: 5rem;
 }
@@ -178,13 +202,16 @@ h3.titulo {
 .carrito-producto {
     max-width: 100%;
     display: grid;
-    grid-template-columns: repeat(1,1fr);
+    grid-template-columns: repeat(1, 1fr);
     place-items: center;
     margin: 0%;
     padding: 0%;
 }
+
 p.titulo_c {
     margin: 0%;
 }
 
-
+table, td, th {
+    border: 0.125rem solid var(--negro);
+}

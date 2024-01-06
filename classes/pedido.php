@@ -38,12 +38,28 @@ class Pedido
     {
         return $this->id_producto;
     }
+
     public function getCantidad_producto()
     {
         return $this->cantidad_producto;
     }
 
-    public static function select_pedido($id_cliente)
+    // Función para insertar un pedido
+    public function insert()
+    {
+        try {
+            $conexion = camisetasDB::connectDB();
+            $sql = "INSERT INTO pedidos (fecha, id_cliente, id_producto, cantidad_producto) VALUES (?, ?, ?, ?)";
+            $stmt = $conexion->prepare($sql);
+            $stmt->execute([$this->fecha, $this->id_cliente, $this->id_producto, $this->cantidad_producto]);
+        } catch (Exception $e) {
+            // Manejar el error
+            echo "Error en la base de datos: " . $e->getMessage();
+        }
+    }
+
+    // Función para obtener los pedidos de un cliente
+    public static function select($id_cliente)
     {
         try {
             $conexion = camisetasDB::connectDB();
@@ -55,39 +71,24 @@ class Pedido
             ORDER BY p.fecha DESC";
             $stmt = $conexion->prepare($sql);
             $stmt->execute([$id_cliente]);
-            // $stmt->execute([$_SESSION['id_cliente']]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             echo "Error de conexión: " . $e->getMessage();
-            return false; // Devuelve falso en caso de error
+            // Devuelve falso en caso de error
+            return false;
         }
     }
 
-    public function insertar()
+    // Función para eliminar un pedido
+    public static function delete($id_pedido, $id_cliente)
     {
         try {
             $conexion = camisetasDB::connectDB();
-            $sql = "INSERT INTO pedidos (fecha, id_cliente, id_producto, cantidad_producto) VALUES (?, ?, ?, ?)";
+            $sql = "DELETE FROM pedidos WHERE id_pedido = ? AND id_cliente = ?";
             $stmt = $conexion->prepare($sql);
-            $stmt->execute([$this->fecha, $this->id_cliente, $this->id_producto, $this->cantidad_producto]);
+            $stmt->execute([$id_pedido, $id_cliente]);
         } catch (Exception $e) {
             // Manejar el error
-            var_dump($e);
-            echo "Error en la base de datos: " . $e->getMessage();
-        }
-    }
-
-    // Método para eliminar un pedido
-    public static function deletePedido($id_pedido) {
-
-        try {
-            $conexion = camisetasDB::connectDB();
-            $sql = "DELETE FROM pedidos WHERE id_pedido = ?";
-            $stmt = $conexion->prepare($sql);
-            $stmt->execute([$id_pedido]);
-        } catch (Exception $e) {
-            // Manejar el error
-            var_dump($e);
             echo "Error al eliminar el pedido: " . $e->getMessage();
         }
     }
