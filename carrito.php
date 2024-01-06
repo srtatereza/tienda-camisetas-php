@@ -1,101 +1,132 @@
+<?php 
+session_start();
+include_once 'classes/cliente.php';
+include_once 'classes/producto.php';
+include_once 'classes/pedido.php';
+include_once 'include/camisetasDB.php';
+
+?>
+
+<!DOCTYPE html>
+<html>
+
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tienda_Camisetas</title>
+    <!-- Enlace al archivo CSS externo -->
+    <link rel="stylesheet" href="css/normalize.css">
+    <link href="https://fonts.googleapis.com/css2?family=Staatliches&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="css/estilos.css">
+<body>
+<div class="menu">
+			<ul class="menu-content">
+				<li><a href="home.php">Home</a></li>
+                <li><a href="carrito.php">Carrito</a></li>
+				<li><a href="pedidos.php">Pedidos</a></li>
+			</ul>
+</div>
+
+<div class="contenedor">
+
+
+<div class="carrito-producto">
+
 <?php
 
-session_start();
 
+if (isset($_POST['agregar_al_carrito'])) { 
+    $id_producto = $_POST['id_producto'];
+    $nombre = $_POST['nombre'];
+    $precio = $_POST['precio'];
+    $cantidad = (int)$_POST['cantidad'];
 
-$conn = 'mysql:host=localhost:3306;dbname=camisetas';
-$username = 'root';
-$password = '';
-
-try {
-    $pdo = new PDO($conn, $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-    // Inicializar la sesión si no está configurada
-    if (!isset($_SESSION['carrito'])) {
-        $_SESSION['carrito'] = [];
-        
-    }
-
-    // Agregar producto al carrito
-    if (isset($_POST['codigo']) && isset($_POST['cantidad'])) {
-        $codigo = trim($_POST['codigo']);
-        $cantidad = trim($_POST['cantidad']);
-
-        if (isset($_SESSION['carrito'][$codigo])) {
-            // Actualizar la cantidad si el producto ya está en el carrito
-            $_SESSION['carrito'][$codigo] += $cantidad;
-        } else {
-            // Agregar el producto al carrito con la cantidad seleccionada
-            $_SESSION['carrito'][$codigo] = $cantidad;
+    // Verifica que la cantidad sea válida (entre 1 y 10)
+    if ($cantidad > 0 && $cantidad <= 10) {
+        // Agrega el producto al carrito en la sesión
+        if (!isset($_SESSION['carrito'])) {
+            $_SESSION['carrito'] = array();
         }
+
+        $_SESSION['carrito'][$id_producto] = array(
+            'nombre' => $_POST['nombre'],
+            'precio' => $_POST['precio'],
+            'cantidad' => $cantidad
+        );
+
+        echo '<p>Producto agregado al carrito.</p>';
+    } else {
+        echo '<p>La cantidad seleccionada no es válida.</p>';
     }
-    // Mostrar el contenido del carrito
-    echo '<h2>Carrito de Compras</h2>';
+}
 
-    $total = 0; // Inicializar el total a cero
+// Realizar el pedido al hacer clic en "Comprar"
+if (isset($_POST['comprar'])) {
+    // Insertar los productos del carrito en la tabla pedidos
+    $fechaCompra = date('Y-m-d H:i:s');
+    foreach ($_SESSION['carrito'] as $id_producto => $producto) {
+        $cantidad_producto = $producto['cantidad'];
+        $id_cliente = $_SESSION['id_cliente'];
+        $pedido = new Pedido("", $fechaCompra, $id_cliente, $id_producto, $cantidad_producto);
+        $pedido->insertar();
+    }
 
-    foreach ($_SESSION['carrito'] as $codigo => $cantidad) {
-        // Verificar si la cantidad está directamente en el carrito o es un array asociativo
-        if (is_array($cantidad)) {
-            $producto = $cantidad; // El producto ya tiene formato correcto
-        } else {
-            // Obtener detalles del producto si la cantidad es directa
-            $stmt = $pdo->prepare('SELECT nombre, precio FROM productos WHERE codigo = ?');
-            $stmt->execute([$codigo]);
-            $producto = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-            // Asegurarse de que la cantidad está presente y es válida
-            $producto['cantidad'] = $cantidad;
+    // Limpiar el carrito después de realizar la compra
+    $_SESSION['carrito'] = [];
+    echo '<p>Compra realizada con éxito. El carrito ha sido vaciado.</p>';  
 
-    
-        $precio_total_producto = $producto['precio'] * $cantidad;
+    echo '<a href="pedidos.php">Ver la factura de mi pedido</a>';
+    echo '<br>';
+}
+
+// Muestra productos en el carrito y calcula el total
+if (!empty($_SESSION['carrito'])) {
+    foreach ($_SESSION['carrito'] as $id_producto => $producto) {
+        echo '<p class="titulo_c">Nombre:' . $producto['nombre'] . '</p>';
+        echo '<p class="titulo_c">Precio: ' . $producto['precio'] . '$.c/u</p>';
+
+        // Otros detalles del producto...
+
+        $precio_total_producto = $producto['precio'] * $producto['cantidad'];
         $total += $precio_total_producto;
 
-        echo '<p>' . $producto['nombre'] . ' - Cantidad: ' . $cantidad . ' - Precio: $' . $precio_total_producto . '</p>';
-
-        // Formulario para eliminar producto del carrito
-        echo '<form action="carrito.php" method="post">';
-        echo '<input type="hidden" name="eliminar_codigo" value="' . $codigo . '">';
-        echo '<input type="submit" value="Eliminar">';
-        echo '</form>';
+        echo '<p class="titulo_c">' .'Cantidad: ' . $producto['cantidad'] . ' = Precio: $' . $precio_total_producto . '</p>';
+        echo '<br>';
+        // Puedes realizar operaciones adicionales aquí, como la suma del total
     }
+
+    echo '<p class="titulo_c">Precio Total: $' . $total . '</p>';
+    echo '<br>';
+
+    // Agregar un enlace o formulario para eliminar productos del carrito
+echo '<form action="carrito.php" method="post">';
+echo '<input type="hidden" name="eliminar_producto" value="' . $id_producto . '">';
+echo '<input type="submit" name="eliminar" value="Eliminar" class="formulario_submit">';
+echo '</form>';
+
+echo '<br>';
+
+
+//formulario para comprar los productos
+echo '<form action="carrito.php" method="post">';
+echo '<input type="submit" name="comprar" value="comprar" class="formulario_submit">';
+echo '</form>';
+} 
+
+
+
+// Procesar eliminación del carrito
+if (isset($_POST['eliminar_producto'])) {
+    $id_productoEliminar = $_POST['eliminar_producto'];
+    unset($_SESSION['carrito'][$id_productoEliminar]);
+    echo 'Producto eliminado del carrito.';
 }
 
-            echo '<p>Total: $' . $total . '</p>'; 
-            echo '<form action="carrito.php" method="post">';
-            echo '<input type="submit" name="comprar" value="Comprar">';
-            echo '</form>';
+echo '<br>';
+echo '<a href="home.php">Seguir Comprando</a>';
 
-            // Enlace para seguir comprando
-            echo '<a href="verificar.php">Seguir Comprando</a>';
-
-    // Realizar el pedido al hacer clic en "Comprar"
-    if (isset($_POST['comprar'])) {
-        // Insertar los productos del carrito en la tabla pedidos
-        $fechaCompra = date('Y-m-d H:i:s');
-        foreach ($_SESSION['carrito'] as $codigo => $cantidad_producto) {
-            $cantidad_producto = is_numeric($cantidad_producto) ? (int)$cantidad_producto : 0;
-
-            $stmtPedido = $pdo->prepare('INSERT INTO pedidos (fecha, id_cliente, codigo, cantidad_producto) VALUES (?, ?, ?, ?)');
-            $stmtPedido->execute([$fechaCompra, $_SESSION['id_cliente'], $codigo, $cantidad_producto]);
-        }
-
-        // Limpiar el carrito después de realizar la compra
- 
-        $_SESSION['carrito'] = [];
-        echo '<p>Compra realizada con éxito. El carrito ha sido vaciado.</p>';
-        echo '<a href="pedidos.php">Ver la factura de mi pedido</a>';
-    }
-    
-
-} catch (PDOException $e) {
-    die('Error al conectarse a la base de datos: ' . $e->getMessage());
-}
-
-// Eliminar producto del carrito
-if (isset($_POST['eliminar_codigo'])) {
-    $eliminar_codigo = $_POST['eliminar_codigo'];
-    unset($_SESSION['carrito'][$eliminar_codigo]);
-}
 ?>
+</div>
+
+</div>
+</body>
+</html>

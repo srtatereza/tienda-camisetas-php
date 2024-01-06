@@ -1,60 +1,66 @@
 <?php
 session_start();
 
+include_once 'classes/producto.php';
+include_once 'classes/cliente.php';
+include_once 'classes/pedido.php';
+include_once 'include/camisetasDB.php';
+
 try {
-    $conexion = new PDO("mysql:host=localhost:3306; dbname=camisetas", "root", "");
-    $conexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-    // Verificar si hay un cliente registrado en la sesión
-    if (!isset($_SESSION['id_cliente']) || empty($_SESSION['id_cliente'])) {
-        die("Error: No hay cliente registrado.");
+    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['eliminar_pedido'])) {
+        // Asegúrate de validar y sanear la entrada del usuario
+        $id_cliente = $_SESSION['id_cliente'];
+        $idPedidoEliminar = $_POST['id_pedido'];
+        $pedidos = Pedido::deletePedido($idPedidoEliminar, $id_cliente);
     }
-
-    // Obtener información del cliente
-    $stmtCliente = $conexion->prepare("SELECT nombre, apellido, direccion, telefono FROM clientes WHERE id_cliente = ?");
-    $stmtCliente->execute([$_SESSION['id_cliente']]);
-    $cliente = $stmtCliente->fetch(PDO::FETCH_ASSOC);
-
-    
-
-    // Obtener información de los pedidos y productos asociados del cliente
-    $stmtPedidos = $conexion->prepare("SELECT p.id_pedido, p.fecha, pr.nombre, p.cantidad_producto as cantidad_producto
-    FROM pedidos p 
-    JOIN productos pr ON p.codigo = pr.codigo
-    WHERE p.id_cliente = ? 
-    ORDER BY p.fecha DESC");
-$stmtPedidos->execute([$_SESSION['id_cliente']]);
-
-
-    $pedidos = $stmtPedidos->fetchAll(PDO::FETCH_ASSOC);
-
 } catch (PDOException $e) {
-    echo "Error de conexión: " . $e->getMessage();
-    die();
+    die('Error al conectarse a la base de datos: ' . $e->getMessage());
 }
+
+try {
+    // Obtener la lista de pedido utilizando la función select de la clase Pedido
+    $id_cliente = $_SESSION['id_cliente'];
+    $pedidos = Pedido::select_pedido($id_cliente);
+} catch (PDOException $e) {
+    die('Error al conectarse a la base de datos: ' . $e->getMessage());
+}
+
+error_reporting(E_ALL)
 ?>
 
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
+
+<html>
+
+    <meta charset="UTF-8">  
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Información del Cliente y Pedidos con Productos</title>
-</head>
+    <title>Tienda_Camisetas</title>
+    <!-- Enlace al archivo CSS externo -->
+    <link rel="stylesheet" href="css/normalize.css">
+    <link href="https://fonts.googleapis.com/css2?family=Staatliches&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="css/estilos.css">
 <body>
 
-    <h2>Información del Cliente</h2>
-    <p><strong>Nombre:</strong> <?php echo $cliente['nombre'] . ' ' . $cliente['apellido']; ?></p>
-    <p><strong>Dirección:</strong> <?php echo $cliente['direccion']; ?></p>
-    <p><strong>Telefono:</strong> <?php echo $cliente['telefono']; ?></p>
+<div class="menu">
+			<ul class="menu-content">
+				<li><a href="home.php">Home</a></li>
+                <li><a href="carrito.php">Carrito</a></li>
+				<li><a href="pedidos.php">Pedidos</a></li>
+			</ul>
+</div>
 
-    <h2>Pedidos del Cliente con Productos</h2>
+<div class="contenedor">
+
+<div class="carrito-producto"> 
+    <h2>Pedidos del Cliente</h2>
     <table border="1">
         <tr>
             <th>ID Pedido</th>
             <th>Fecha del Pedido</th>
-            <th>Nombre del Producto</th>  
+            <th>Nombre del Producto</th>
             <th>Cantida</th>
+            <th>Historial</th>
         </tr>
         <?php foreach ($pedidos as $pedido): ?>
             <tr>
@@ -62,16 +68,29 @@ $stmtPedidos->execute([$_SESSION['id_cliente']]);
                 <td><?php echo $pedido['fecha']; ?></td>
                 <td><?php echo $pedido['nombre']; ?></td>
                 <td><?php echo $pedido['cantidad_producto']; ?></td>
+                <td>
+                    <!-- Formulario para eliminar el pedido específico -->
+                    <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+                        <input type="hidden" name="id_pedido" value="<?php echo $pedido['id_pedido']; ?>">
+                        <input type="submit" name="eliminar_pedido" value="Eliminar" class="formulario_submit">
+                    </form>
+                </td>
             </tr>
         <?php endforeach; ?>
     </table>
+</div>
 
-
-      <!-- Enlace para index-->
-      <a href="home.php">Seguir Comprando</a>
+    <br>
+    <!-- Enlace para index-->
+    <a href="home.php">Seguir Comprando</a>
+    <br>
+    <br>
 
     <!-- Enlace para cerrar la sesión-->
     <a href="cerrar.php">Cerrar sesión</a>
 
+    </div>
+
 </body>
+
 </html>

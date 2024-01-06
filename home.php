@@ -1,90 +1,122 @@
 <?php
 session_start();
+include_once 'include/camisetasDB.php';
+include_once 'classes/producto.php';
+include_once 'classes/cliente.php';
 
-// Verifica si el usuario está autenticado
-if (!isset($_SESSION['email'])) {
-    header("Location: index.php");
-    exit();
-}
 
-// Inicializa la variable $_SESSION['id_cliente']
-$_SESSION['id_cliente'] = null;
-
-$conn = 'mysql:host=localhost:3306;dbname=camisetas';
-$username = 'root';
-$password = '';
-
-try {
-    $pdo = new PDO($conn, $username, $password);
-
-    $stmt = $pdo->prepare('SELECT id_cliente, email FROM clientes WHERE email = ?');
-    $stmt->execute([$_SESSION['email']]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if ($row) {
-        // Asigna $_SESSION['id_cliente'] si se encontró el usuario
-        $_SESSION['id_cliente'] = $row['id_cliente'];
-    }
-} catch (PDOException $e) {
-    die('Error al conectarse a la base de datos: ' . $e->getMessage());
+// Ejecucion de una Cookies con tiempo de expiración-->
+// Si han aceptado la política
+if(isset($_REQUEST['Bienvenido'])) {
+    // Crea una cookie
+    setcookie('politica', '1', time() + 600, '/');
 }
 ?>
 
 <!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Feedback-TerezaFranco</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="../../lib/bootstrap.min.css" rel="stylesheet" integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
-    <link href="../../lib/bootstrap-icons.css" rel="stylesheet">
-</head>
+<html>
+
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tienda_Camisetas</title>
+    <!-- Enlace al archivo CSS externo -->
+    <link rel="stylesheet" href="css/normalize.css">
+    <link href="https://fonts.googleapis.com/css2?family=Staatliches&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="css/estilos.css">
 <body>
+    
 
-    <h1>SESION INICIADA CORRECTAMENTE - ( Estas dentro del sistema).</h1>
-    <!-- Mensaje al usuario, mostrando su correo de login -->
-    <h2>Tu correo es: <?php echo $_SESSION['email']; ?></h2>
+<div class="menu">
+			<ul class="menu-content">
+                <li><a href="home.php">Home</a></li>
+                <li><a href="carrito.php">Carrito</a></li>
+				<li><a href="pedidos.php">Pedidos</a></li>
+			</ul>
+</div>
 
-    <!-- CONTENEDOR DE LOS PRODUCTOS -->
-    <h1 class="bienvenido">Productos</h1>
+<!-- Campo de la Cokie -->
+<div>
+    <?php
+    if (!isset($_GET['Bienvenido']) && !isset($_COOKIE['politica'])):
+    ?>
+    <!-- Mensaje de cookies -->
+    <div class="cookies">
+        <h2>Cookies</h2>
+        <p>¿Aceptas nuestras cookies?</p>
+        <a href="?Bienvenido">Sí, con todas sus consecuencias</a>
+    </div>
+    <?php endif; ?>
+</div>
 
-<?php
+    <div class="contenedor">
 
+    <?php
 
-$conn = new PDO('mysql:host=localhost:3306;dbname=camisetas', 'root', ''); // Asegúrate de tener los valores correctos
-
-try {
-    $stmt = $conn->query('SELECT * FROM productos');
-    $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    foreach ($productos as $producto) {
-        echo '<h2>' . $producto['nombre'] . '</h2>';
-        echo '<p>Código: ' . $producto['codigo'] . '</p>';
-        echo '<p>Precio: $' . $producto['precio'] . '</p>';
-        echo '<img src="' . $producto['imagen'] . '" alt="' . $producto['nombre'] . '">';
-
-
-        // Formulario para agregar al carrito con cantidad
-        echo '<form action="carrito.php" method="post">';
-        echo '<input type="hidden" name="codigo" value="' . intval($producto['codigo'] ). '">';
-
-        // Campo para la cantidad
-        echo '<label for="cantidad">Cantidad:</label>';
-        echo '<input type="number" name="cantidad" min="1" max="10" value="1">';
-
-        // Botón para agregar al carrito
-        echo '<input type="submit" value="Agregar al Carrito">';
-        echo '</form>';
-    }
-} catch (PDOException $e) {
-    die('Error al conectarse a la base de datos: ' . $e->getMessage());
+// Verificar si hay una sesión activa
+if (isset($_SESSION['email'])) {
+    $correoUsuario = htmlspecialchars($_SESSION['email']);
+    echo "<h1> Estas en Tu perfil, $correoUsuario. <br> Ahora puedes comprar lo que te guste.</h1>";
+} else {
+    // Si no hay sesión activa, redirige al usuario al inicio de sesión
+    header("Location: login.php");
+    exit();
 }
-?> 
+
+?>
 
 
+    <!-- enlaces hacia la pagina de registro o de login -->
+
+    <div class="productos">
+        
+    <?php
+
+    try {
+        // Obtener la lista de productos utilizando la función select de la clase Producto
+        $productos = Producto::select();
+        // Verificar si hay productos antes de iterar
+        if (!empty($productos)) {
+            foreach ($productos as $producto) {
+                echo '<h3 class="titulo">' . $producto->getNombre() . '</h3>';
+                echo '<p class="titulo">Código: ' . $producto->getIdproducto() . '</p>';
+                echo '<p class="titulo">Precio: $' . $producto->getPrecio() . '</p>';
+                echo '<img src="' . $producto->getImagen() . '" alt="' . $producto->getNombre() . '">';
+
+                echo '<br>';
+
+                // Formulario para agregar al carrito con cantidad
+                echo '<form action="carrito.php" method="post">';
+                echo '<input type="hidden" name="id_producto" value="' . $producto->getIdproducto()   . '">';
+                echo '<input type="hidden" name="nombre" value="' . $producto->getNombre()  . '">';
+                echo '<input type="hidden" name="precio" value="' . $producto->getPrecio() . '">';
+
+                // Campo para la cantidad
+                echo '<label for="cantidad" class="label_cantidad">Cantidad:</label>';
+                echo '<input type="number" name="cantidad" min="1" max="10" value="1">';
+
+                echo '<br>';
+
+                // Botón para agregar al carrito
+                echo '<input type="submit" name="agregar_al_carrito" value="Agregar al Carrito" class="formulario_submit">';
+                echo '</form>';
+            }
+        } else {
+            echo 'No hay productos disponibles en este momento.';
+        }
+    } catch (PDOException $e) {
+        die('Error al conectarse a la base de datos: ' . $e->getMessage());
+    }
+
+    ?>
+
+</div>
 
     <!-- Enlace para cerrar la sesión-->
     <a href="cerrar.php">Cerrar sesión</a>
 
+
+    </div>
+
 </body>
+
 </html>
