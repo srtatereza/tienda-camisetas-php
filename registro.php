@@ -77,7 +77,7 @@ $mensajeRegistro = "Estas registrado <br> <a href='login.php'> Inicia sesión </
     <input type="tel" name="telefono" id="telefono" placeholder="Teléfono" required>
     <br>
 
-    <label for="email">Nuevo Usuario:</label>
+    <label for="email">EMAIL:</label>
     <input type="email" name="email" id="email" placeholder="Correo electrónico" autocomplete="username" required>
     <br>
 

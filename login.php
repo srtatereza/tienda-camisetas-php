@@ -68,7 +68,7 @@ $mensajeInicio = "No estas registrado<br><a href='registro.php'>Ir a Registrarse
         <br>
 
         <label for="contrasenia">contraseña:</label>
-        <input type="password" name="contrasenia" id="contrasenia" placeholder="contrasenia" required autocomplete="current-password">
+        <input type="password" name="contrasenia" id="contrasenia" placeholder="contraseña" required autocomplete="current-password">
         
         <br>
         <input type="submit" name="logarse" value="Iniciar sesión" class="formulario_submit">
